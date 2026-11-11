@@ -1,0 +1,354 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// USER & SECURITY RELATIONSHIPS
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // Relations
+  member       Member?
+  invitesSent     Invite[]         @relation("InvitesSent")
+  invitesReceived Invite[]         @relation("InvitesReceived")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  // Relations
+  memberships ClubMembership[]
+
+  @@unique([name]) // e.g., "Admin", "Coach", "Archer", "Club Manager"
+  @@map("role")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ==========================================
+// CORE ENTITIES (MEMBER & CLUBS)
+// ==========================================
+
+model Member {
+  id          String   @id @default(uuid())
+  userId      String?
+  firstName   String
+  lastName    String
+  birthDate   DateTime
+  genderId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gender      Gender           @relation(fields: [genderId], references: [id], onDelete: Cascade)
+  memberships ClubMembership[]
+  scores      Score[]
+  highscores  Highscore[]
+
+  @@unique([userId])
+  @@map("member")
+}
+
+model Club {
+  id          String   @id @default(uuid())
+  name        String 
+  code        String? // Short code or registration number
+  address     String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  memberships ClubMembership[]
+  contests    Contest[]
+  invites     Invite[]
+
+  @@unique([name, code])
+  @@map("club")
+}
+
+model ClubMembership {
+  id        String    @id @default(uuid())
+  memberId  String
+  clubId    String
+  roleId    String
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime? // Nullable if currently active
+
+  // Relations
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, clubId, roleId])
+  @@map("clubmembership")
+}
+
+model Invite {
+  id              String       @id @default(cuid())
+  clubId          String
+  userId          String? // If user already exists
+  archeryGBNumber String? // If inviting by number
+  invitedBy       String // User ID of inviter
+  status          InviteStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+
+  // Relations
+  club    Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user    User? @relation("InvitesReceived", fields: [userId], references: [id])
+  inviter User  @relation("InvitesSent", fields: [invitedBy], references: [id])
+}
+
+// ==========================================
+// ARCHERY METADATA LOOKUPS
+// ==========================================
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Gender {
+  id    String @id @default(uuid())
+  name  String // e.g., "Male", "Female", "Non-Binary"
+  
+  // Relations
+  members Member[]
+
+  @@unique([name])
+  @@map("gender")
+}
+
+model AgeGroup {
+  id         String   @id @default(uuid())
+  name       String   // e.g., "Under 21", "50+", "Senior"
+  minAge     Int?
+  maxAge     Int?
+
+  // Relations
+  highscores Highscore[]
+  rounds     Round[]
+
+  @@unique([name])
+  @@map("agegroup")
+}
+
+model BowType {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Recurve", "Compound", "Barebow", "Longbow"
+  
+  // Relations
+  bowStyles   BowStyle[]
+
+  @@unique([name])
+  @@map("bowtype")
+}
+
+model BowStyle {
+  id        String   @id @default(uuid())
+  bowTypeId String
+  name      String   // e.g., "WA Recurve", "Traditional Recurve"
+
+  // Relations
+  bowType   BowType     @relation(fields: [bowTypeId], references: [id], onDelete: Cascade)
+  scores    Score[]
+  highscores Highscore[]
+
+  @@unique([name])
+  @@map("bowstyle")
+}
+
+model Discipline {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Target", "Field", "3D", "Indoor"
+  
+  // Relations
+  contests    Contest[]
+  highscores  Highscore[]
+
+  @@unique([name])
+  @@map("discipline")
+}
+
+model TargetFaceType {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Full Face", "3-Spot", "Vegas", "Animal"
+
+  // Relations
+  targetFaces TargetFace[]
+
+  @@unique([name])
+  @@map("targetfacetype")
+}
+
+model TargetFace {
+  id               String   @id @default(uuid())
+  targetFaceTypeId String
+  sizeCm           Int      // e.g., 122, 80, 40
+
+  // Relations
+  targetFaceType   TargetFaceType @relation(fields: [targetFaceTypeId], references: [id], onDelete: Cascade)
+  rounds           Round[]
+  
+  @@unique([targetFaceTypeId, sizeCm])
+  @@map("targetface")
+}
+
+// ==========================================
+// COMPETITIONS, ROUNDS, & PERFORMANCE
+// ==========================================
+
+model Contest {
+  id           String   @id @default(uuid())
+  clubId       String
+  disciplineId String
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  location     String?
+
+  // Relations
+  club         Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  rounds       Round[]
+
+  @@map("contest")
+}
+
+model Round {
+  id           String   @id @default(uuid())
+  contestId    String
+  targetFaceId String
+  ageGroupId   String?
+  name         String   // e.g., "70m Round", "WA 18m", "First Half"
+  distanceMeters Int
+  totalArrows  Int      // e.g., 72, 60
+  endsCount    Int      // Number of ends (e.g., 12 ends of 6 arrows)
+  arrowsPerEnd Int      // e.g., 3 or 6
+
+  // Relations
+  contest      Contest    @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  targetFace   TargetFace @relation(fields: [targetFaceId], references: [id], onDelete: Cascade)
+  ageGroup     AgeGroup?  @relation(fields: [ageGroupId], references: [id], onDelete: Cascade)
+  scores       Score[]
+
+  @@map("round")
+}
+
+model Score {
+  id         String   @id @default(uuid())
+  memberId   String
+  roundId    String
+  bowStyleId String
+  totalScore Int      // Total aggregated score
+  tensCount  Int      @default(0) // Inner 10s / X count for tie breakers
+  xCount     Int      @default(0)
+  arrowPlacements Json? // Optional JSON array holding individual arrow values per end e.g. [[10,9,9], [10,10,8]]
+  isCertified Boolean  @default(false) // Verified by a judge/club manager
+  shotAt     DateTime @default(now())
+
+  // Relations
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  round      Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  bowStyle   BowStyle @relation(fields: [bowStyleId], references: [id], onDelete: Cascade)
+
+  @@map("score")
+}
+
+model Highscore {
+  id           String   @id @default(uuid())
+  memberId     String
+  disciplineId String
+  bowStyleId   String
+  ageGroupId   String
+  scoreValue   Int
+  achievedAt   DateTime
+
+  // Relations
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  bowStyle     BowStyle   @relation(fields: [bowStyleId], references: [id], onDelete: Cascade)
+  ageGroup     AgeGroup   @relation(fields: [ageGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, disciplineId, bowStyleId, ageGroupId])
+  @@map("highscore")
+}
+

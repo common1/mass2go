@@ -207,3 +207,522 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
+## 2 - Database
+
+```
+[https://www.prisma.io/docs/guides/v7/frameworks/nextjs]
+```
+
+### 2.1 - Install and Configure Prisma
+
+```
+[https://www.prisma.io/docs/guides/v7/frameworks/nextjs#2-install-and-configure-prisma]
+```
+
+```
+Install dependencies
+npm install prisma@prev tsx @types/pg --save-dev
+
+added 152 packages, and audited 882 packages in 21s
+
+290 packages are looking for funding
+  run `npm fund` for details
+
+14 vulnerabilities (2 low, 11 moderate, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+```
+
+```
+npm install @prisma/client@7 @prisma/adapter-pg dotenv pg
+
+added 13 packages, changed 1 package, and audited 895 packages in 5s
+
+291 packages are looking for funding
+  run `npm fund` for details
+
+14 vulnerabilities (2 low, 11 moderate, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+```
+
+```
+Initialize prisma
+npx prisma init
+✔ Skills installed
+
+Initialized Prisma in your project
+
+  prisma/
+    schema.prisma
+  prisma7.config.ts
+  .env
+  .claude/skills/
+  .windsurf/skills/
+  .agents/skills/
+  skills-lock.json
+
+warn You already have a .gitignore file. Don't forget to add .env in it to not commit any private information.
+
+Next, choose how you want to set up your database:
+
+CONNECT EXISTING DATABASE:
+  1. Configure your DATABASE_URL in prisma7.config.ts
+  2. Run prisma db pull to introspect your database.
+
+CREATE NEW DATABASE:
+  Local: npx prisma dev (runs Postgres locally in your terminal)
+  Cloud: npx create-db (creates a free Prisma Postgres database)
+
+Then, define your models in prisma/schema.prisma and run prisma migrate dev to apply your schema.
+
+Learn more: https://pris.ly/getting-started
+```
+
+```
+Drop database and user
+
+psql -U postgres
+postgres=# DROP DATABASE mass2go_db; 
+postgres=# DROP USER mass2go_user; 
+```
+
+```
+Create database and user
+
+psql -U postgres
+postgres=# CREATE DATABASE mass2go_db; 
+postgres=# CREATE USER mass2go_user WITH ENCRYPTED PASSWORD 'WXYZ&6789'; 
+postgres=# GRANT ALL PRIVILEGES ON DATABASE mass2go_db TO mass2go_user; 
+postgres=# \c mass2go_db postgres;
+You are now connected to database "mass2go_db" as user "postgres"
+mass2go_db=# GRANT ALL ON SCHEMA public TO mass2go_user; 
+mass2go_db=# ALTER USER mass2go_user CREATEDB;
+```
+
+```
+Create DATABASE_URL in .env
+DATABASE_URL="postgres://mass2go_user:WXYZ&6789@localhost:5432/mass2go_db"
+```
+
+### 2.2 - Define your prisma schema
+
+```
+[https://www.prisma.io/docs/guides/v7/frameworks/nextjs#22-define-your-prisma-schema]
+```
+
+```
+In prisma/schema.prisma add the following models
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// USER & SECURITY RELATIONSHIPS
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // Relations
+  member       Member?
+  invitesSent     Invite[]         @relation("InvitesSent")
+  invitesReceived Invite[]         @relation("InvitesReceived")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  // Relations
+  memberships ClubMembership[]
+
+  @@unique([name]) // e.g., "Admin", "Coach", "Archer", "Club Manager"
+  @@map("role")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ==========================================
+// CORE ENTITIES (MEMBER & CLUBS)
+// ==========================================
+
+model Member {
+  id          String   @id @default(uuid())
+  userId      String?
+  firstName   String
+  lastName    String
+  birthDate   DateTime
+  genderId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gender      Gender           @relation(fields: [genderId], references: [id], onDelete: Cascade)
+  memberships ClubMembership[]
+  scores      Score[]
+  highscores  Highscore[]
+
+  @@unique([userId])
+  @@map("member")
+}
+
+model Club {
+  id          String   @id @default(uuid())
+  name        String 
+  code        String? // Short code or registration number
+  address     String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  memberships ClubMembership[]
+  contests    Contest[]
+  invites     Invite[]
+
+  @@unique([name, code])
+  @@map("club")
+}
+
+model ClubMembership {
+  id        String    @id @default(uuid())
+  memberId  String
+  clubId    String
+  roleId    String
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime? // Nullable if currently active
+
+  // Relations
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, clubId, roleId])
+  @@map("clubmembership")
+}
+
+model Invite {
+  id              String       @id @default(cuid())
+  clubId          String
+  userId          String? // If user already exists
+  archeryGBNumber String? // If inviting by number
+  invitedBy       String // User ID of inviter
+  status          InviteStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+
+  // Relations
+  club    Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user    User? @relation("InvitesReceived", fields: [userId], references: [id])
+  inviter User  @relation("InvitesSent", fields: [invitedBy], references: [id])
+}
+
+// ==========================================
+// ARCHERY METADATA LOOKUPS
+// ==========================================
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Gender {
+  id    String @id @default(uuid())
+  name  String // e.g., "Male", "Female", "Non-Binary"
+  
+  // Relations
+  members Member[]
+
+  @@unique([name])
+  @@map("gender")
+}
+
+model AgeGroup {
+  id         String   @id @default(uuid())
+  name       String   // e.g., "Under 21", "50+", "Senior"
+  minAge     Int?
+  maxAge     Int?
+
+  // Relations
+  highscores Highscore[]
+  rounds     Round[]
+
+  @@unique([name])
+  @@map("agegroup")
+}
+
+model BowType {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Recurve", "Compound", "Barebow", "Longbow"
+  
+  // Relations
+  bowStyles   BowStyle[]
+
+  @@unique([name])
+  @@map("bowtype")
+}
+
+model BowStyle {
+  id        String   @id @default(uuid())
+  bowTypeId String
+  name      String   // e.g., "WA Recurve", "Traditional Recurve"
+
+  // Relations
+  bowType   BowType     @relation(fields: [bowTypeId], references: [id], onDelete: Cascade)
+  scores    Score[]
+  highscores Highscore[]
+
+  @@unique([name])
+  @@map("bowstyle")
+}
+
+model Discipline {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Target", "Field", "3D", "Indoor"
+  
+  // Relations
+  contests    Contest[]
+  highscores  Highscore[]
+
+  @@unique([name])
+  @@map("discipline")
+}
+
+model TargetFaceType {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Full Face", "3-Spot", "Vegas", "Animal"
+
+  // Relations
+  targetFaces TargetFace[]
+
+  @@unique([name])
+  @@map("targetfacetype")
+}
+
+model TargetFace {
+  id               String   @id @default(uuid())
+  targetFaceTypeId String
+  sizeCm           Int      // e.g., 122, 80, 40
+
+  // Relations
+  targetFaceType   TargetFaceType @relation(fields: [targetFaceTypeId], references: [id], onDelete: Cascade)
+  rounds           Round[]
+  
+  @@unique([targetFaceTypeId, sizeCm])
+  @@map("targetface")
+}
+
+// ==========================================
+// COMPETITIONS, ROUNDS, & PERFORMANCE
+// ==========================================
+
+model Contest {
+  id           String   @id @default(uuid())
+  clubId       String
+  disciplineId String
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  location     String?
+
+  // Relations
+  club         Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  rounds       Round[]
+
+  @@map("contest")
+}
+
+model Round {
+  id           String   @id @default(uuid())
+  contestId    String
+  targetFaceId String
+  ageGroupId   String?
+  name         String   // e.g., "70m Round", "WA 18m", "First Half"
+  distanceMeters Int
+  totalArrows  Int      // e.g., 72, 60
+  endsCount    Int      // Number of ends (e.g., 12 ends of 6 arrows)
+  arrowsPerEnd Int      // e.g., 3 or 6
+
+  // Relations
+  contest      Contest    @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  targetFace   TargetFace @relation(fields: [targetFaceId], references: [id], onDelete: Cascade)
+  ageGroup     AgeGroup?  @relation(fields: [ageGroupId], references: [id], onDelete: Cascade)
+  scores       Score[]
+
+  @@map("round")
+}
+
+model Score {
+  id         String   @id @default(uuid())
+  memberId   String
+  roundId    String
+  bowStyleId String
+  totalScore Int      // Total aggregated score
+  tensCount  Int      @default(0) // Inner 10s / X count for tie breakers
+  xCount     Int      @default(0)
+  arrowPlacements Json? // Optional JSON array holding individual arrow values per end e.g. [[10,9,9], [10,10,8]]
+  isCertified Boolean  @default(false) // Verified by a judge/club manager
+  shotAt     DateTime @default(now())
+
+  // Relations
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  round      Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  bowStyle   BowStyle @relation(fields: [bowStyleId], references: [id], onDelete: Cascade)
+
+  @@map("score")
+}
+
+model Highscore {
+  id           String   @id @default(uuid())
+  memberId     String
+  disciplineId String
+  bowStyleId   String
+  ageGroupId   String
+  scoreValue   Int
+  achievedAt   DateTime
+
+  // Relations
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  bowStyle     BowStyle   @relation(fields: [bowStyleId], references: [id], onDelete: Cascade)
+  ageGroup     AgeGroup   @relation(fields: [ageGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, disciplineId, bowStyleId, ageGroupId])
+  @@map("highscore")
+}
+
+```
+
+### 2.3 Run migrations and generate prisma client
+
+```
+npx prisma migrate dev --name create_database_tables
+Loaded Prisma config from prisma7.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "mass2go_db", schema "public" at "localhost:5432"
+
+Applying migration `20261111122428_create_database_tables`
+
+The following migration(s) have been created and applied from new schema changes:
+
+prisma\migrations/
+  └─ 20261111122428_create_database_tables/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+```
+
+```
+>npx prisma generate
+Loaded Prisma config from prisma7.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.10.1 -> 8.0.0-rc.33                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+✔ Generated Prisma Client (7.10.1) to .\src\generated\prisma in 97ms
+```
+
+```
+Start prisma studio
+
+npx prisma studio
+Loaded Prisma config from prisma7.config.ts.
+
+
+Prisma Studio is running at: http://localhost:51212
+```
+
