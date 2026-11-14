@@ -726,3 +726,10 @@ Loaded Prisma config from prisma7.config.ts.
 Prisma Studio is running at: http://localhost:51212
 ```
 
+```
+Remove all items from the database
+
+npx prisma migrate reset
+```
+
+
