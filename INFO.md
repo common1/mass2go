@@ -75,27 +75,21 @@ You can update by running: npm i -g create-next-app
 ## 1.2 - Setup Shadcn/UI
 
 ```
-npx shadcn@4.23.0 init
-Need to install the following packages:
-shadcn@4.23.0
-Ok to proceed? (y) 
-
-√ Select a component library » Base UI (Recommended)
-√ Which preset would you like to use? » Nova
+npx shadcn@3.3.1 init
 ✔ Preflight checks.
 ✔ Verifying framework. Found Next.js.
-✔ Validating Tailwind CSS. Found v4.
+✔ Validating Tailwind CSS config. Found v4.
 ✔ Validating import alias.
+√ Which color would you like to use as the base color? » Slate
 ✔ Writing components.json.
 ✔ Checking registry.
-✔ Installing dependencies.
-✔ Updating fonts.
-✔ Created 2 files:
-  - src\components\ui\button.tsx
-  - src\lib\utils.ts
+✔ Updating CSS variables in src\app\globals.css
 ✔ Updating src\app\globals.css
+✔ Installing dependencies.
+ℹ Skipped 1 files: (files might be identical, use --overwrite to overwrite)
+  - src\lib\utils.ts
 
-Project initialization completed.
+Success! Project initialization completed.
 You may now add components.
 ```
 
@@ -103,11 +97,12 @@ You may now add components.
 
 ```
 Do not select code-block, questionnaire, trace
-npx shadcn@4.23.0 add
-√ Which components would you like to add? » accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, code-block, collapsible, combobox, command, context-menu, dialog, direction, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, spinner, switch, table, tabs, textarea, toast, toggle, toggle-group, tooltip, trace
+npx shadcn@3.3.1 add
+√ Which components would you like to add? » accordion, alert, alert-dialog, aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card, carousel, chart, checkbox, collapsible, combobox, command, context-menu, dialog, direction, drawer, dropdown-menu, empty, field, form, hover-card, input, input-group, input-otp, item, kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, spinner, switch, table, tabs, textarea, toggle, toggle-group, tooltip
 ✔ Checking registry.
+✔ Updating CSS variables in src\app\globals.css
 ✔ Installing dependencies.
-✔ Created 65 files:
+✔ Created 61 files:
   - src\components\ui\accordion.tsx
   - src\components\ui\alert.tsx
   - src\components\ui\aspect-ratio.tsx
@@ -115,10 +110,12 @@ npx shadcn@4.23.0 add
   - src\components\ui\badge.tsx
   - src\components\ui\breadcrumb.tsx
   - src\components\ui\bubble.tsx
+  - src\components\ui\button.tsx
   - src\components\ui\card.tsx
   - src\components\ui\checkbox.tsx
   - src\components\ui\collapsible.tsx
   - src\components\ui\context-menu.tsx
+  - src\components\ui\dialog.tsx
   - src\components\ui\direction.tsx
   - src\components\ui\drawer.tsx
   - src\components\ui\dropdown-menu.tsx
@@ -129,6 +126,7 @@ npx shadcn@4.23.0 add
   - src\components\ui\kbd.tsx
   - src\components\ui\label.tsx
   - src\components\ui\marker.tsx
+  - src\components\ui\menubar.tsx
   - src\components\ui\message.tsx
   - src\components\ui\native-select.tsx
   - src\components\ui\navigation-menu.tsx
@@ -139,8 +137,10 @@ npx shadcn@4.23.0 add
   - src\components\ui\scroll-area.tsx
   - src\components\ui\select.tsx
   - src\components\ui\separator.tsx
+  - src\components\ui\sheet.tsx
   - src\components\ui\skeleton.tsx
   - src\components\ui\slider.tsx
+  - src\components\ui\sonner.tsx
   - src\components\ui\spinner.tsx
   - src\components\ui\switch.tsx
   - src\components\ui\table.tsx
@@ -148,48 +148,24 @@ npx shadcn@4.23.0 add
   - src\components\ui\textarea.tsx
   - src\components\ui\toggle.tsx
   - src\components\ui\tooltip.tsx
-  - src\hooks\use-highlighted-code.ts
-  - src\lib\highlighter.tsx
-  - src\hooks\use-mobile.ts
   - src\components\ui\alert-dialog.tsx
   - src\components\ui\attachment.tsx
   - src\components\ui\calendar.tsx
   - src\components\ui\carousel.tsx
-  - src\components\ui\dialog.tsx
   - src\components\ui\message-scroller.tsx
   - src\components\ui\pagination.tsx
-  - src\components\ui\questionnaire.tsx
-  - src\components\ui\sheet.tsx
-  - src\components\ui\toast.tsx
   - src\components\ui\chart.tsx
-  - src\components\ui\trace.tsx
-  - src\components\ui\menubar.tsx
+  - src\components\ui\command.tsx
+  - src\components\ui\form.tsx
   - src\components\ui\button-group.tsx
   - src\components\ui\field.tsx
   - src\components\ui\item.tsx
   - src\components\ui\input-group.tsx
   - src\components\ui\toggle-group.tsx
-  - src\components\ui\code-block.tsx
   - src\components\ui\sidebar.tsx
   - src\components\ui\combobox.tsx
-  - src\components\ui\command.tsx
-ℹ Skipped 1 file: (files might be identical, use --overwrite to overwrite)
-  - src\components\ui\button.tsx
-The `tooltip` component has been added. Remember to wrap your app with the `TooltipProvider` component.
-
-```tsx title="app/layout.tsx"
-import { TooltipProvider } from "@/components/ui/tooltip"
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <TooltipProvider>{children}</TooltipProvider>
-      </body>
-    </html>
-  )
-}
-```
+ℹ Skipped 1 files: (files might be identical, use --overwrite to overwrite)
+  - src\hooks\use-mobile.ts
 
 The `tooltip` component has been added. Remember to wrap your app with the `TooltipProvider` component.
 
@@ -782,3 +758,65 @@ File: src/trpc/client.tsx
 
 File: trpc/server.tsx
 ```
+
+## 4 - Authentication
+
+```
+[https://www.youtube.com/watch?v=ED2H_y6dmC8&t=5721s]
+[https://cwa.run/node-auth]
+[https://better-auth.com/docs/installation]
+```
+
+### 4.1 Install the Package
+
+```
+[https://better-auth.com/docs/installation#install-the-package]
+
+npm install better-auth@1.7.12
+```
+
+### 4.2 Set Environment Variables
+
+```
+[https://better-auth.com/docs/installation#set-environment-variables]
+
+1. Secret Key 
+File: .env
+BETTER_AUTH_SECRET="VnUjh1azLcyXDshzHo9aytVWGZayymSp"
+
+2. Set Base URL
+File: .env
+BETTER_AUTH_URL="http://localhost:3000"
+```
+
+### 4.3 Create A Better Auth Instance
+
+```
+[https://better-auth.com/docs/installation#create-a-better-auth-instance]
+
+File: src/lib/auth.ts
+```
+
+### 4.4 Configure Database
+
+```
+[https://better-auth.com/docs/installation#configure-database]
+
+File: src/lib/auth.ts
+```
+
+### 4.5 Create Database Tables
+
+```
+[https://better-auth.com/docs/installation]
+
+Generate
+npx @better-auth/cli generate
+
+Migrate
+prisma migrate dev
+
+Check
+prisma studio
+```
+
