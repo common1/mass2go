@@ -830,4 +830,154 @@ prisma studio
 
 ```
 
-Current:
+## 6 Background Jobs
+
+```
+[https://www.youtube.com/watch?v=ED2H_y6dmC8&t=10505s]
+[https://cwa.run/mprocs]
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start]
+```
+
+### Info
+
+```
+npm run dev
+npx inngest-cli@1.12.1 dev
+```
+
+### 6.0 Adjust schema.prisma
+
+```
+File: schema.prisma
+...
+model WorkFlow {
+  id   String @id @default(cuid())
+  name String
+}
+...
+```
+
+```
+npx prisma migrate dev
+Loaded Prisma config from prisma7.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "mass2go_db", schema "public" at "localhost:5432"
+
+√ Enter a name for the new migration: ... workflows-table
+Applying migration `20261119154553_workflows_table`
+
+The following migration(s) have been created and applied from new schema changes:
+
+prisma\migrations/
+  └─ 20261119154553_workflows_table/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+```
+
+```
+npx prisma generate
+Loaded Prisma config from prisma7.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.10.1 -> 8.0.0-rc.34                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+✔ Generated Prisma Client (7.10.1) to .\src\generated\prisma in 111ms
+```
+
+### 6.1 Install Inngest
+
+```
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#1-install-inngest]
+
+npm install inngest@3.44.1
+```
+
+### 6.2 Run the Inngest Dev Server
+
+```
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#2-run-the-inngest-dev-server]
+
+npx inngest-cli@1.12.1 dev
+```
+
+### 6.3 Create an Inngest client
+
+```
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#3-create-an-inngest-client]
+
+File: src/inngest/client.ts
+// src/inngest/client.ts
+import { Inngest } from "inngest";
+
+export const inngest = new Inngest({ id: "mass2go" });
+
+File: src/inngest/functions.ts
+import { inngest } from "./client";
+
+export const helloWorld = inngest.createFunction(
+  { id: "hello-world" },
+  { event: "test/hello.world" },
+  async ({ event, step }) => {
+    await step.sleep("wait-a-moment", "1s");
+    return { message: `Hello ${event.data.email}` };
+  },
+);
+
+File: src/app/api/inngest/route.ts
+import { serve } from "inngest/next";
+import { inngest } from "@/inngest/client";
+import { helloWorld } from "@/inngest/functions";
+
+export const { GET, POST, PUT } = serve({
+  client: inngest,
+  functions: [
+    helloWorld
+  ],
+});
+```
+
+### 6.4. Write your first Inngest function
+
+```
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#4-write-your-first-function]
+
+File: src/inngest/functions.ts
+import { inngest } from "./client";
+
+export const helloWorld = inngest.createFunction(
+  { id: "hello-world" },
+  { event: "test/hello.world" },
+  async ({ event, step }) => {
+    await step.sleep("wait-a-moment", "1s");
+    return { message: `Hello ${event.data.email}` };
+  },
+);
+```
+
+### 6.5 Trigger your function
+
+```
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#5-trigger-your-function]
+
+From the dev server
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#from-the-dev-server]
+
+From your app
+[https://www.inngest.com/docs/getting-started/nextjs-quick-start#from-your-app]
+
+File: src/trpc/routers/_app.ts
+```
+
+Current: 3:11:49
+
