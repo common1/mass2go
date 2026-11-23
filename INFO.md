@@ -979,5 +979,28 @@ From your app
 File: src/trpc/routers/_app.ts
 ```
 
-Current: 3:11:49
+## 7 AI Providers
+ 
+```
+[https://www.youtube.com/watch?v=ED2H_y6dmC8&t=12489s]
+[https://cwa.run/ai-sdk]
+[https://ai-sdk.dev/providers/ai-sdk-providers/google]
+[https://aistudio.google.com/api-keys]
+[https://cwa.run/google-ai]
+
+<!-- npm install ai@5.0.60 -->
+npm install ai@7.0.179
+
+Free
+<!-- npm install @ai-sdk/google@2.0.17 -->
+npm install @ai-sdk/google@4.0.124
+
+Payed
+<!-- npm install @ai-sdk/openai@4.0.103 -->
+npm install @ai-sdk/openai@4.0.122
+<!-- npm install @ai-sdk/anthropic@4.0.89 -->
+npm install @ai-sdk/anthropic@4.0.107
+```
+
+Current: 3:56:52
 
