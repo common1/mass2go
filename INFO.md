@@ -843,6 +843,7 @@ prisma studio
 ```
 npm run dev
 npx inngest-cli@1.12.1 dev
+
 ```
 
 ### 6.0 Adjust schema.prisma
@@ -1003,4 +1004,25 @@ npm install @ai-sdk/anthropic@4.0.107
 ```
 
 Current: 3:56:52
+
+## 8 Error Tracking
+
+```
+[https://www.youtube.com/watch?v=ED2H_y6dmC8&t=14513s]
+```
+
+```
+NIY
+```
+
+## 9 Sidebar Layout
+
+```
+[https://www.youtube.com/watch?v=ED2H_y6dmC8&t=16074s]
+```
+
+```
+```
+
+Current: 4:55:04
 
